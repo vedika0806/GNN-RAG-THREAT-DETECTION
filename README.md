@@ -3,19 +3,33 @@
 Team 3 | DATA 298A | SJSU Spring 2026
 
 ## Project Structure
-cybersec_pipeline/
-├── dags/                          # Airflow DAG
-├── dbt/                           # dbt transformation models
-│   ├── models/
-│   │   ├── staging/
-│   │   ├── intermediate/
-│   │   └── marts/
+Airflow/
+├── dags/
+│   └── cybersec_unified_pipeline.py
+├── dbt/
 │   ├── dbt_project.yml
 │   ├── profiles.yml
-│   └── sources.yml
-├── data/                          # Input data (UWF_Data auto-created)
+│   ├── sources.yml
+│   └── models/
+│       ├── staging/
+│       │   ├── stg_network_logs.sql
+│       │   ├── stg_cve_mitre.sql
+│       │   └── schema.yml
+│       ├── intermediate/
+│       │   ├── int_network_clean.sql
+│       │   └── int_cve_enriched.sql
+│       └── marts/
+│           ├── mart_node_mapping.sql
+│           ├── mart_super_edges.sql
+│           ├── mart_gnn_ready.sql
+│           └── mart_cve_threat_index.sql
+├── data/
+│   └── CVE_MITRE_Full_Scored_Dataset.csv
 ├── docker-compose.yml
-└── .env                           # Not committed — see setup below
+├── .env
+├── .env.example
+├── .gitignore
+└── README.md
 
 ## Setup
 
