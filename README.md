@@ -3,6 +3,7 @@
 Team 3 | DATA 298A | SJSU Spring 2026
 
 ## Project Structure
+```
 Airflow/
 ├── dags/
 │   └── cybersec_unified_pipeline.py
@@ -25,10 +26,10 @@ Airflow/
 │           └── mart_cve_threat_index.sql
 ├── data/
 │   └── CVE_MITRE_Full_Scored_Dataset.csv
-├── docker-compose.yml
-├── .env
+├── .env                          (not committed)
 ├── .env.example
 ├── .gitignore
+├── docker-compose.yml
 └── README.md
 
 ## Setup
