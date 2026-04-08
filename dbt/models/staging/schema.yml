@@ -1,0 +1,157 @@
+version: 2
+
+# ── STAGING MODELS ────────────────────────────────────────────────────────────
+
+models:
+  - name: stg_network_logs
+    description: >
+      Cleaned UWF network logs. Removes Duplicate rows, derives final_target
+      from label_tactic, normalizes vlan, fills nulls in service/duration/bytes.
+    columns:
+      - name: uid
+        description: "Unique connection ID"
+        tests:
+          - not_null
+      - name: src_ip_zeek
+        description: "Source IP"
+        tests:
+          - not_null
+      - name: dest_ip_zeek
+        description: "Destination IP"
+        tests:
+          - not_null
+      - name: proto
+        description: "Network protocol"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["tcp", "udp", "icmp"]
+      - name: final_target
+        description: "Derived binary label: Attack or Normal"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Attack", "Normal"]
+
+  - name: stg_cve_mitre
+    description: >
+      Cleaned CVE-MITRE staging layer. Filters nulls, lowercases tactic IDs,
+      casts year and severity to correct types.
+    columns:
+      - name: cve_id
+        description: "CVE identifier"
+        tests:
+          - not_null
+          - unique
+      - name: mitre_tactic_id
+        description: "Lowercased MITRE tactic ID"
+        tests:
+          - not_null
+      - name: severity_score
+        description: "CVSS score cast to float"
+        tests:
+          - not_null
+      - name: cve_year
+        description: "Publication year"
+        tests:
+          - not_null
+
+# ── INTERMEDIATE MODELS ───────────────────────────────────────────────────────
+
+  - name: int_network_clean
+    description: >
+      Log-scaled numerical features and one-hot encoded protocol/service columns.
+      Exact replication of EDA notebook cell 88 transformations.
+    columns:
+      - name: src_ip_zeek
+        tests:
+          - not_null
+      - name: dest_ip_zeek
+        tests:
+          - not_null
+      - name: label
+        description: "Binary label: 1=Attack, 0=Normal"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+  - name: int_cve_enriched
+    description: >
+      CVE records enriched with severity band (CRITICAL/HIGH/MEDIUM/LOW)
+      and human-readable tactic label.
+    columns:
+      - name: cve_id
+        tests:
+          - not_null
+          - unique
+      - name: severity_band
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+      - name: tactic_label
+        tests:
+          - not_null
+
+# ── MART MODELS ───────────────────────────────────────────────────────────────
+
+  - name: mart_node_mapping
+    description: >
+      Maps each of the 1,176 unique IP addresses to an integer node ID [0..1175]
+      for GNN tensor construction.
+    columns:
+      - name: ip
+        tests:
+          - not_null
+          - unique
+      - name: node_id
+        tests:
+          - not_null
+          - unique
+
+  - name: mart_super_edges
+    description: >
+      Aggregates 27M individual log rows into 2,183 directed super-edges between
+      unique IP pairs. Each edge is a behavioral vector for the GNN.
+    columns:
+      - name: source_idx
+        tests:
+          - not_null
+      - name: target_idx
+        tests:
+          - not_null
+      - name: connection_count
+        tests:
+          - not_null
+
+  - name: mart_gnn_ready
+    description: >
+      Final GNN-ready edge table with 80/20 transductive train/test split mask.
+    columns:
+      - name: source_idx
+        tests:
+          - not_null
+      - name: target_idx
+        tests:
+          - not_null
+      - name: split_mask
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["train", "test"]
+
+  - name: mart_cve_threat_index
+    description: >
+      Aggregated threat intelligence index: CVE counts and severity stats
+      grouped by tactic, year, and severity band. Used by GraphRAG hybrid search.
+    columns:
+      - name: mitre_tactic_id
+        tests:
+          - not_null
+      - name: cve_count
+        tests:
+          - not_null
+      - name: avg_severity
+        tests:
+          - not_null

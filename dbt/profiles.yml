@@ -1,0 +1,19 @@
+cybersec_duckdb:
+  target: prod
+  outputs:
+    prod:
+      type: duckdb
+      path: /opt/Airflow/data/uwf_cybersecurity.db
+      threads: 4
+
+cybersec_clickhouse:
+  target: prod
+  outputs:
+    prod:
+      type: clickhouse
+      schema: default
+      host: https://zkddrg7t39.us-west-2.aws.clickhouse.cloud:8443
+      port: 8443
+      user: default
+      password: C4GKqT3nbXkPpnG
+      secure: true

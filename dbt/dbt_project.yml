@@ -1,0 +1,15 @@
+name: 'dbt_cybersec'
+version: '1.0.0'
+profile: 'cybersec_clickhouse'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+
+models:
+  dbt_cybersec:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table

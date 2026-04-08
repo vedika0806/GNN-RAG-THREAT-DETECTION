@@ -1,0 +1,30 @@
+# Airflow
+logs/
+plugins/
+airflow.db
+airflow.cfg
+webserver_config.py
+__pycache__/
+*.pyc
+*.pyo
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# Data files (too large for git)
+data/UWF_Data/
+data/*.parquet
+data/*.db
+
+# Environment
+.env
+*.env
+
+# Mac
+.DS_Store
+
+# Docker
+*.log
