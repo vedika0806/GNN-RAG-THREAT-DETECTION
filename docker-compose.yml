@@ -15,10 +15,8 @@
 #   1. Place this file at the root of cybersec_pipeline/
 #   2. Run: docker-compose up -d
 #   3. Open: http://localhost:8080  (admin / admin)
-#   4. Add Connections in Admin → Connections (duckdb_default, clickhouse_default)
+#   4. Set CLICKHOUSE_* in .env if using Airflow Python tasks for load/validation
 # =============================================================================
-
-version: '3.8'
 
 x-airflow-common: &airflow-common
   image: apache/airflow:2.8.1-python3.11
@@ -33,18 +31,22 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW__WEBSERVER__SECRET_KEY: '${AIRFLOW_SECRET_KEY:-69aa26a02b0d969ae7d0bb4a5211e2f0205b8bf7f4f33ba6caaf30cae0fd73a5}'
+    AIRFLOW__LOGGING__BASE_LOG_FOLDER: '/opt/Airflow/logs'
+
+    # ClickHouse credentials for DAG Python tasks (must match dbt profiles.yml)
+    CLICKHOUSE_HOST: '${CLICKHOUSE_HOST:-zkddrg7t39.us-west-2.aws.clickhouse.cloud}'
+    CLICKHOUSE_USER: '${CLICKHOUSE_USER:-default}'
+    CLICKHOUSE_PASSWORD: '${CLICKHOUSE_PASSWORD:-}'
 
     # ── pip packages installed at container startup ──────────────────────────
-    # All packages your DAG needs: dbt adapters, cosmos, DuckDB, ClickHouse,
-    # data processing, and web scraping
     _PIP_ADDITIONAL_REQUIREMENTS: >-
       dbt-core==1.7.0
-      dbt-duckdb==1.7.0
       dbt-clickhouse==1.7.0
       astronomer-cosmos==1.3.0
-      duckdb==0.10.0
       clickhouse-connect==0.7.0
       pandas==2.1.0
+      pyarrow==14.0.2
       fastparquet==2023.10.1
       beautifulsoup4==4.12.2
       requests==2.31.0
@@ -55,12 +57,12 @@ x-airflow-common: &airflow-common
     - ./dags:/opt/Airflow/dags
     # dbt project (models, profiles, sources, schema)
     - ./dbt:/opt/Airflow/dbt
-    # data folder (CSV input + auto-created UWF_Data/ + DuckDB file)
+    # data folder (auto-created UWF_Data/ + combined parquet)
     - ./data:/opt/Airflow/data
-    # Airflow logs
-    - airflow-logs:/opt/Airflow/logs
-    # Airflow plugins (empty but needed)
-    - airflow-plugins:/opt/Airflow/plugins
+    # Airflow logs (bind mount — init container chowns ./logs for UID 50000)
+    - ./logs:/opt/Airflow/logs
+    # Airflow plugins
+    - ./plugins:/opt/Airflow/plugins
 
   user: "${AIRFLOW_UID:-50000}:0"
 
@@ -167,6 +169,10 @@ services:
   airflow-worker:
     <<: *airflow-common
     command: celery worker
+    deploy:
+      resources:
+        limits:
+          memory: 4g
     healthcheck:
       test:
         - "CMD-SHELL"
@@ -206,5 +212,3 @@ services:
 
 volumes:
   postgres-db-volume:
-  airflow-logs:
-  airflow-plugins:

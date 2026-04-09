@@ -2,9 +2,8 @@ version: 2
 
 sources:
   - name: raw
+    schema: analytics
+    description: "Raw tables loaded by Airflow into ClickHouse analytics database"
     tables:
       - name: network_logs
         description: "Raw UWF network logs loaded by Airflow"
-
-      - name: cve_mitre_master
-        description: "Raw CVE-MITRE data loaded by Airflow"

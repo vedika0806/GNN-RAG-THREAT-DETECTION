@@ -3,11 +3,11 @@ SELECT
     src_ip_zeek,
     dest_ip_zeek,
     -- Log Transformation (mirrors your ln(1+x) approach)
-    LN(1 + duration)             AS log_duration,
-    LN(1 + orig_bytes)           AS log_orig_bytes,
-    LN(1 + resp_bytes)           AS log_resp_bytes,
-    LN(1 + orig_pkts)            AS log_orig_pkts,
-    LN(1 + resp_pkts)            AS log_resp_pkts,
+    ln(1 + duration)             AS log_duration,
+    ln(1 + orig_bytes)           AS log_orig_bytes,
+    ln(1 + resp_bytes)           AS log_resp_bytes,
+    ln(1 + orig_pkts)            AS log_orig_pkts,
+    ln(1 + resp_pkts)            AS log_resp_pkts,
     -- Protocol One-Hot
     CASE WHEN proto = 'tcp'  THEN 1 ELSE 0 END AS proto_tcp,
     CASE WHEN proto = 'udp'  THEN 1 ELSE 0 END AS proto_udp,

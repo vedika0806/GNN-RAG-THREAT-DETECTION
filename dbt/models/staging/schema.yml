@@ -33,29 +33,6 @@ models:
           - accepted_values:
               values: ["Attack", "Normal"]
 
-  - name: stg_cve_mitre
-    description: >
-      Cleaned CVE-MITRE staging layer. Filters nulls, lowercases tactic IDs,
-      casts year and severity to correct types.
-    columns:
-      - name: cve_id
-        description: "CVE identifier"
-        tests:
-          - not_null
-          - unique
-      - name: mitre_tactic_id
-        description: "Lowercased MITRE tactic ID"
-        tests:
-          - not_null
-      - name: severity_score
-        description: "CVSS score cast to float"
-        tests:
-          - not_null
-      - name: cve_year
-        description: "Publication year"
-        tests:
-          - not_null
-
 # ── INTERMEDIATE MODELS ───────────────────────────────────────────────────────
 
   - name: int_network_clean
@@ -75,24 +52,6 @@ models:
           - not_null
           - accepted_values:
               values: [0, 1]
-
-  - name: int_cve_enriched
-    description: >
-      CVE records enriched with severity band (CRITICAL/HIGH/MEDIUM/LOW)
-      and human-readable tactic label.
-    columns:
-      - name: cve_id
-        tests:
-          - not_null
-          - unique
-      - name: severity_band
-        tests:
-          - not_null
-          - accepted_values:
-              values: ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
-      - name: tactic_label
-        tests:
-          - not_null
 
 # ── MART MODELS ───────────────────────────────────────────────────────────────
 
@@ -140,18 +99,3 @@ models:
           - not_null
           - accepted_values:
               values: ["train", "test"]
-
-  - name: mart_cve_threat_index
-    description: >
-      Aggregated threat intelligence index: CVE counts and severity stats
-      grouped by tactic, year, and severity band. Used by GraphRAG hybrid search.
-    columns:
-      - name: mitre_tactic_id
-        tests:
-          - not_null
-      - name: cve_count
-        tests:
-          - not_null
-      - name: avg_severity
-        tests:
-          - not_null

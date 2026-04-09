@@ -4,7 +4,7 @@ SELECT
     d.node_id                        AS target_idx,
     COUNT(*)                         AS connection_count,
     AVG(e.log_duration)              AS mean_log_duration,
-    STDDEV(e.log_duration)           AS std_log_duration,
+    stddevSamp(e.log_duration)       AS std_log_duration,
     AVG(e.log_orig_bytes)            AS mean_log_orig_bytes,
     AVG(e.log_resp_bytes)            AS mean_log_resp_bytes,
     SUM(e.proto_tcp)                 AS tcp_count,

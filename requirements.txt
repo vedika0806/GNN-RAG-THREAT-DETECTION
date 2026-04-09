@@ -1,0 +1,15 @@
+# cybersec_unified_pipeline.py — Airflow DAG, Cosmos, ETL
+apache-airflow>=2.7.0
+astronomer-cosmos>=1.5.0
+
+# Data processing & I/O
+pandas>=2.0.0
+requests>=2.31.0
+fastparquet>=2023.10.0
+pyarrow>=14.0.0
+beautifulsoup4>=4.12.0
+clickhouse-connect>=0.7.0
+
+# dbt (invoked by Cosmos DbtTaskGroup)
+dbt-core>=1.7.0
+dbt-clickhouse>=1.7.0
