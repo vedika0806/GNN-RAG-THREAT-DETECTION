@@ -1,5 +1,5 @@
 streamlit
-torch
+torch==2.0.0
 torch-geometric
 pandas
 numpy
@@ -8,3 +8,4 @@ sentence-transformers
 langchain
 openai
 python-dotenv
+--extra-index-url https://download.pytorch.org/whl/cpu
