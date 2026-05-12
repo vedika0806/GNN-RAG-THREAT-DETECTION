@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: network_logs_clean
+    description: >
+      Silver cleaned network logs. Removes duplicates, derives final_target from
+      label_tactic (authoritative across all dataset years), applies median imputation
+      for Zeek incomplete-connection NULLs, normalizes VLAN and history fields.
+    columns:
+      - name: uid
+        tests:
+          - not_null
+      - name: src_ip_zeek
+        tests:
+          - not_null
+      - name: dest_ip_zeek
+        tests:
+          - not_null
+      - name: final_target
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Attack", "Normal"]
+              quote: true
+      - name: duration
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              strictly: false
+      - name: orig_bytes
+        tests:
+          - not_null
+      - name: proto
+        tests:
+          - not_null
+      - name: label_technique
+        tests:
+          - not_null
+
+  - name: node_mapping
+    description: >
+      Stable mapping from IP address string to integer node ID (0-indexed).
+      Used by Gold layer to produce edge_index tensors for PyG.
+    columns:
+      - name: ip
+        tests:
+          - not_null
+          - unique
+      - name: node_id
+        tests:
+          - not_null
+          - unique
+      - name: is_local
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]

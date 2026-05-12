@@ -1,0 +1,39 @@
+name: uwf_threat_detection
+version: "1.0.0"
+config-version: 2
+
+profile: uwf_threat_detection
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  uwf_threat_detection:
+    bronze:
+      +schema: RAW
+      +materialized: table
+      +tags: ["bronze"]
+    silver:
+      +schema: SILVER
+      +materialized: table
+      +tags: ["silver"]
+    gold:
+      +schema: GOLD
+      +materialized: table
+      +tags: ["gold"]
+
+vars:
+  uwf_database: "{{ env_var('SNOWFLAKE_DATABASE', 'UWF_CYBERSECURITY') }}"
+  # Median imputation values — recompute with:
+  #   SELECT MEDIAN(duration), MEDIAN(orig_bytes), MEDIAN(resp_bytes)
+  #   FROM SILVER.NETWORK_LOGS_CLEAN WHERE duration IS NOT NULL
+  median_duration: 0.114
+  median_orig_bytes: 312
+  median_resp_bytes: 0
+  # Top-K services to one-hot encode (beyond these → srv_other)
+  top_services: ["http", "dns", "ssl", "ssh", "smtp", "ftp", "rdp", "dhcp"]
