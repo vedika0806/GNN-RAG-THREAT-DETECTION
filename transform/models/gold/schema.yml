@@ -1,0 +1,94 @@
+version: 2
+
+models:
+  - name: gnn_node_features
+    description: >
+      15-dim behavioral node features per IP address, replacing the torch.eye(1176)
+      identity matrix used in the notebook. Features are aggregated from Silver cleaned
+      flows and cover degree, volume, byte profile, threat indicators, protocol mix,
+      service mix, connection quality, and local/external topology context.
+    columns:
+      - name: node_id
+        tests:
+          - not_null
+          - unique
+      - name: ip
+        tests:
+          - not_null
+          - unique
+      - name: log_out_degree
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              strictly: false
+      - name: attack_ratio_out
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
+      - name: attack_ratio_in
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
+      - name: is_local
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0.0, 1.0]
+
+  - name: gnn_edge_attr
+    description: >
+      10-dim normalized edge feature table for the 2,183 unique directed IP pairs,
+      plus is_attack_edge binary label (not a feature — this is y in the PyG Data object).
+      All count-based features are log-scaled (key fix over notebook's raw SUM).
+      Includes attack_flow_ratio continuous auxiliary signal and a deterministic
+      stratified train/val/test split mask.
+    columns:
+      - name: source_idx
+        tests:
+          - not_null
+      - name: target_idx
+        tests:
+          - not_null
+      - name: is_attack_edge
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: split
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["train", "val", "test"]
+              quote: true
+      - name: attack_flow_ratio
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
+      - name: edge_weight
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              strictly: true
+
+  - name: gnn_edge_index
+    description: >
+      Lightweight integer edge-pair table. Subset of gnn_edge_attr.
+      Used by Airflow export task to build PyG edge_index tensor independently.
+    columns:
+      - name: source_idx
+        tests:
+          - not_null
+      - name: target_idx
+        tests:
+          - not_null
+      - name: is_attack_edge
+        tests:
+          - not_null

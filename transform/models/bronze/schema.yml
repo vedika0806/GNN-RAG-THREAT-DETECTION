@@ -1,0 +1,48 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('SNOWFLAKE_DATABASE', 'UWF_CYBERSECURITY') }}"
+    schema: RAW
+    tables:
+      - name: NETWORK_LOGS_RAW
+        description: "Raw UWF Zeek logs loaded by Airflow bronze ingestion DAG."
+        loaded_at_field: _ingested_at
+        freshness:
+          warn_after: {count: 8, period: hour}
+          error_after: {count: 24, period: hour}
+        columns:
+          - name: uid
+            description: "Zeek connection unique ID"
+            tests:
+              - not_null
+          - name: src_ip_zeek
+            tests:
+              - not_null
+          - name: dest_ip_zeek
+            tests:
+              - not_null
+          - name: label_tactic
+            description: "MITRE tactic label. NULL is valid (older dataset files lack labels). Silver derives final_target from this."
+
+models:
+  - name: stg_network_logs
+    description: >
+      Bronze staging model. Selects all raw columns with zero transformation.
+      Acts as the single source of truth reference for downstream Silver models.
+    columns:
+      - name: uid
+        tests:
+          - not_null
+      - name: src_ip_zeek
+        tests:
+          - not_null
+      - name: dest_ip_zeek
+        tests:
+          - not_null
+      - name: proto
+        tests:
+          - accepted_values:
+              values: ["tcp", "udp", "icmp", "icmp6", "unknown", "esp", "gre", "igmp"]
+              quote: true
+              severity: warn
